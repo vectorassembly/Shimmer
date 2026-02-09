@@ -4,6 +4,9 @@
 
 __Shimmer__ is a fork of [Sparkle](https://github.com/MrScautHD/Sparkle), a modern, high-performance, low-level, cross-platform game engine built on .NET 10 and C# 14.
 
+> [!CAUTION]  
+> This is not production ready by any means, expect breaking changes and consider using [Sparkle](https://github.com/MrScautHD/Sparkle) instead.
+
 Libraries - [Nuget](https://www.nuget.org/packages)
 ======================================================
 - [`Bliss`](https://www.nuget.org/packages/Bliss)
