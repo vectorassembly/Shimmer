@@ -131,8 +131,8 @@ public class Game : Disposable {
     /// <param name="settings">The game settings.</param>
     public Game(GameSettings settings) {
         Instance = this;
-        this.Settings = settings;
-        this._fixedUpdateTimeStep = settings.FixedTimeStep;
+        Settings = settings;
+        _fixedUpdateTimeStep = settings.FixedTimeStep;
     }
     
     /// <summary>
@@ -140,65 +140,66 @@ public class Game : Disposable {
     /// </summary>
     /// <param name="scene">The scene to load initially.</param>
     public void Run(Scene? scene) {
-        if (this.Settings.LogDirectory != string.Empty) {
-            this._logFileWriter = new LogFileWriter(this.Settings.LogDirectory);
-            Logger.Message += this._logFileWriter.WriteFileMsg;
+        if (Settings.LogDirectory != string.Empty) {
+            _logFileWriter = new LogFileWriter(Settings.LogDirectory);
+            Logger.Message += _logFileWriter.WriteFileMsg;
         }
         
         // Setup jitter logger.
-        this._logJitter = new LogJitter();
-        JLogger.Listener += this._logJitter.Log;
+        _logJitter = new LogJitter();
+        JLogger.Listener += _logJitter.Log;
         
-        Logger.Info($"Hello World! Sparkle [{Version}] start...");
+        Logger.Info($"Sparkle [{Version}] start...");
         Logger.Info($"\t> CPU: {SystemInfo.Cpu}");
         Logger.Info($"\t> MEMORY: Total: {SystemInfo.MemoryInfo.Total} MB, Available: {SystemInfo.MemoryInfo.Available} MB");
         Logger.Info($"\t> THREADS: {SystemInfo.Threads}");
         Logger.Info($"\t> OS: {SystemInfo.Os}");
         
         Logger.Info("Initialize window and graphics device...");
-        GraphicsDeviceOptions options = new GraphicsDeviceOptions() {
+        GraphicsDeviceOptions options = new GraphicsDeviceOptions
+        {
             Debug = false,
             HasMainSwapchain = true,
             SwapchainDepthFormat = PixelFormat.D32FloatS8UInt,
-            SyncToVerticalBlank = this.Settings.VSync,
+            SyncToVerticalBlank = Settings.VSync,
             ResourceBindingModel = ResourceBindingModel.Improved,
             PreferDepthRangeZeroToOne = true,
             PreferStandardClipSpaceYDirection = true,
             SwapchainSrgbFormat = false
         };
         
-        this.MainWindow = Window.CreateWindow(WindowType.Sdl3, this.Settings.Size.Width, this.Settings.Size.Height, this.Settings.Title, this.Settings.WindowFlags, options, this.Settings.Backend, out GraphicsDevice graphicsDevice);
-        this.MainWindow.SetMinimumSize(this.Settings.MinSize.Width, this.Settings.MinSize.Height);
-        this.MainWindow.Resized += () => this.OnResize(new Rectangle(this.MainWindow.GetX(), this.MainWindow.GetY(), this.MainWindow.GetWidth(), this.MainWindow.GetHeight()));
-        this.GraphicsDevice = graphicsDevice;
+        MainWindow = Window.CreateWindow(WindowType.Sdl3, Settings.Size.Width, Settings.Size.Height, Settings.Title, Settings.WindowFlags, options, Settings.Backend, out GraphicsDevice graphicsDevice);
+        MainWindow.SetMinimumSize(Settings.MinSize.Width, Settings.MinSize.Height);
+        MainWindow.Resized += () => OnResize(new Rectangle(MainWindow.GetX(), MainWindow.GetY(), MainWindow.GetWidth(), MainWindow.GetHeight()));
+        GraphicsDevice = graphicsDevice;
         
         Logger.Info("\t> Window Info:");
         Logger.Info($"\t \t> Window type: {WindowType.Sdl3}");
-        Logger.Info($"\t \t> Window Size: {this.MainWindow.GetWidth()} x {this.MainWindow.GetHeight()}");
+        Logger.Info($"\t \t> Window Size: {MainWindow.GetWidth()} x {MainWindow.GetHeight()}");
         Logger.Info("\t> Device Info:");
-        Logger.Info($"\t \t> Vendor: {this.GraphicsDevice.VendorName}");
-        Logger.Info($"\t \t> Renderer: {this.GraphicsDevice.DeviceName}");
-        Logger.Info($"\t \t> Backend type: {this.GraphicsDevice.BackendType}, Version: {this.GraphicsDevice.ApiVersion}");
+        Logger.Info($"\t \t> Vendor: {GraphicsDevice.VendorName}");
+        Logger.Info($"\t \t> Renderer: {GraphicsDevice.DeviceName}");
+        Logger.Info($"\t \t> Backend type: {GraphicsDevice.BackendType}, Version: {GraphicsDevice.ApiVersion}");
         
         Logger.Info("Loading window icon...");
-        this.MainWindow.SetIcon(this.Settings.IconPath != string.Empty ? new Image(this.Settings.IconPath) : new Image("content/sparkle/images/icon.png"));
+        MainWindow.SetIcon(Settings.IconPath != string.Empty ? new Image(Settings.IconPath) : new Image("content/sparkle/images/icon.png"));
         
         Logger.Info("Initialize input...");
-        if (this.MainWindow is Sdl3Window) {
-            Input.Init(new Sdl3InputContext(this.MainWindow));
+        if (MainWindow is Sdl3Window) {
+            Input.Init(new Sdl3InputContext(MainWindow));
         }
         else {
             Logger.Fatal("This type of window is not supported by the InputContext!");
         }
         
         Logger.Info("Initialize command list...");
-        this.CommandList = graphicsDevice.ResourceFactory.CreateCommandList();
+        CommandList = graphicsDevice.ResourceFactory.CreateCommandList();
         
         Logger.Info("Initialize time...");
         Time.Init();
         
-        Logger.Info($"Set target FPS to: {this.Settings.TargetFps}");
-        this.SetTargetFps(this.Settings.TargetFps);
+        Logger.Info($"Set target FPS to: {Settings.TargetFps}");
+        SetTargetFps(Settings.TargetFps);
         
         Logger.Info("Initialize audio device...");
         AudioContext.Initialize(44100, 2);
@@ -207,29 +208,29 @@ public class Game : Disposable {
         GlobalResource.Init(graphicsDevice);
         
         Logger.Info("Initialize global graphics assets...");
-        GlobalGraphicsAssets.Init(graphicsDevice, this.MainWindow);
+        GlobalGraphicsAssets.Init(graphicsDevice, MainWindow);
         
         Logger.Info("Initialize full screen renderer...");
-        this.FullScreenRenderPass = new FullScreenRenderer(graphicsDevice);
+        FullScreenRenderPass = new FullScreenRenderer(graphicsDevice);
         
         Logger.Info("Initialize render target texture...");
-        this._renderTarget = new RenderTexture2D(graphicsDevice, (uint) this.MainWindow.GetWidth(), (uint) this.MainWindow.GetHeight(), sampleCount: this.Settings.SampleCount);
-        this._renderResult = new Texture2D(graphicsDevice, new Image(this.MainWindow.GetWidth(), this.MainWindow.GetHeight()), false);
+        _renderTarget = new RenderTexture2D(graphicsDevice, (uint) MainWindow.GetWidth(), (uint) MainWindow.GetHeight(), sampleCount: Settings.SampleCount);
+        _renderResult = new Texture2D(graphicsDevice, new Image(MainWindow.GetWidth(), MainWindow.GetHeight()), false);
         
         Logger.Info("Initialize global sprite batch...");
-        this.GlobalSpriteBatch = new SpriteBatch(graphicsDevice, this.MainWindow);
+        GlobalSpriteBatch = new SpriteBatch(graphicsDevice, MainWindow);
         
         Logger.Info("Initialize global primitive batch...");
-        this.GlobalPrimitiveBatch = new PrimitiveBatch(graphicsDevice, this.MainWindow);
+        GlobalPrimitiveBatch = new PrimitiveBatch(graphicsDevice, MainWindow);
         
         Logger.Info("Initialize global immediate renderer...");
-        this.GlobalImmediateRenderer = new ImmediateRenderer(graphicsDevice);
+        GlobalImmediateRenderer = new ImmediateRenderer(graphicsDevice);
         
         Logger.Info("Initialize graphics context...");
-        this.GraphicsContext = new GraphicsContext(graphicsDevice, this.CommandList, this.FullScreenRenderPass, this.GlobalSpriteBatch, this.GlobalPrimitiveBatch, this.GlobalImmediateRenderer);
+        GraphicsContext = new GraphicsContext(graphicsDevice, CommandList, FullScreenRenderPass, GlobalSpriteBatch, GlobalPrimitiveBatch, GlobalImmediateRenderer);
         
         Logger.Info("Initialize content manager...");
-        this.Content = new ContentManager(graphicsDevice);
+        Content = new ContentManager(graphicsDevice);
         
         Logger.Info("Initialize overlay manager...");
         OverlayManager.Init();
@@ -241,67 +242,67 @@ public class Game : Disposable {
         RegistryManager.Init();
         
         Logger.Info("Initialize scene manager...");
-        SceneManager.Init(graphicsDevice, this.MainWindow, scene, this.Settings.SampleCount);
+        SceneManager.Init(graphicsDevice, MainWindow, scene, Settings.SampleCount);
         
-        this.OnRun();
+        OnRun();
         
         Logger.Info("Load content...");
-        this.Load(this.Content);
+        Load(Content);
         
-        this.Init();
+        Init();
         
         Logger.Info("Start game loop...");
-        while (!this.ShouldClose && this.MainWindow.Exists) {
-            if (this.GetTargetFps() != 0 && Time.DeltaTimer.Elapsed.TotalSeconds <= this._fixedFrameRate) {
+        while (!ShouldClose && MainWindow.Exists) {
+            if (GetTargetFps() != 0 && Time.DeltaTimer.Elapsed.TotalSeconds <= _fixedFrameRate) {
                 continue;
             }
             Time.Update();
             
-            this.MainWindow.PumpEvents();
+            MainWindow.PumpEvents();
             Input.Begin();
             
             AudioContext.Update();
-            this.Update(Time.Delta);
-            this.AfterUpdate(Time.Delta);
+            Update(Time.Delta);
+            AfterUpdate(Time.Delta);
 
-            this._fixedUpdateTimer += Time.Delta;
-            while (this._fixedUpdateTimer >= this._fixedUpdateTimeStep) {
-                this.FixedUpdate(this._fixedUpdateTimeStep);
-                this._fixedUpdateTimer -= this._fixedUpdateTimeStep;
+            _fixedUpdateTimer += Time.Delta;
+            while (_fixedUpdateTimer >= _fixedUpdateTimeStep) {
+                FixedUpdate(_fixedUpdateTimeStep);
+                _fixedUpdateTimer -= _fixedUpdateTimeStep;
             }
             
             // Draw.
-            this.CommandList.Begin();
-            this.CommandList.SetFramebuffer(this._renderTarget.Framebuffer);
-            this.CommandList.ClearColorTarget(0, Color.DarkGray.ToRgbaFloat());
-            this.CommandList.ClearDepthStencil(1.0F);
+            CommandList.Begin();
+            CommandList.SetFramebuffer(_renderTarget.Framebuffer);
+            CommandList.ClearColorTarget(0, Color.DarkGray.ToRgbaFloat());
+            CommandList.ClearDepthStencil(1.0F);
             
-            this.Draw(this.GraphicsContext, this._renderTarget.Framebuffer);
+            Draw(GraphicsContext, _renderTarget.Framebuffer);
             
             // Apply MSAA.
-            if (this._renderTarget.SampleCount != TextureSampleCount.Count1) {
-                this.CommandList.ResolveTexture(this._renderTarget.ColorTexture, this._renderResult.DeviceTexture);
+            if (_renderTarget.SampleCount != TextureSampleCount.Count1) {
+                CommandList.ResolveTexture(_renderTarget.ColorTexture, _renderResult.DeviceTexture);
             }
             else {
-                this.CommandList.CopyTexture(this._renderTarget.ColorTexture, this._renderResult.DeviceTexture);
+                CommandList.CopyTexture(_renderTarget.ColorTexture, _renderResult.DeviceTexture);
             }
             
             // Draw render target texture.
-            this.CommandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
-            this.CommandList.ClearColorTarget(0, Color.DarkGray.ToRgbaFloat());
+            CommandList.SetFramebuffer(graphicsDevice.SwapchainFramebuffer);
+            CommandList.ClearColorTarget(0, Color.DarkGray.ToRgbaFloat());
             
-            this.FullScreenRenderPass.Draw(this.CommandList, this._renderResult, graphicsDevice.SwapchainFramebuffer.OutputDescription);
+            FullScreenRenderPass.Draw(CommandList, _renderResult, graphicsDevice.SwapchainFramebuffer.OutputDescription);
             
-            this.CommandList.End();
+            CommandList.End();
             graphicsDevice.WaitForIdle();
-            graphicsDevice.SubmitCommands(this.CommandList);
+            graphicsDevice.SubmitCommands(CommandList);
             graphicsDevice.SwapBuffers();
             
             Input.End();
         }
         
         Logger.Warn("Application shuts down!");
-        this.OnClose();
+        OnClose();
     }
 
     /// <summary>
@@ -369,12 +370,12 @@ public class Game : Disposable {
     protected virtual void OnResize(Rectangle rectangle) {
         
         // Resize main swapchain.
-        this.GraphicsDevice.MainSwapchain.Resize((uint) rectangle.Width, (uint) rectangle.Height);
+        GraphicsDevice.MainSwapchain.Resize((uint) rectangle.Width, (uint) rectangle.Height);
         
         // Resize render target.
-        this._renderTarget.Resize((uint) rectangle.Width, (uint) rectangle.Height);
-        this._renderResult.Dispose();
-        this._renderResult = new Texture2D(this.GraphicsDevice, new Image(rectangle.Width, rectangle.Height), false);
+        _renderTarget.Resize((uint) rectangle.Width, (uint) rectangle.Height);
+        _renderResult.Dispose();
+        _renderResult = new Texture2D(GraphicsDevice, new Image(rectangle.Width, rectangle.Height), false);
         
         // Resize scene manager.
         SceneManager.OnResize(rectangle);
@@ -396,14 +397,14 @@ public class Game : Disposable {
     /// Gets the target frames per second.
     /// </summary>
     public int GetTargetFps() {
-        return (int) (1.0F / this._fixedFrameRate);
+        return (int) (1.0F / _fixedFrameRate);
     }
     
     /// <summary>
     /// Sets the target frames per second.
     /// </summary>
     public void SetTargetFps(int fps) {
-        this._fixedFrameRate = 1.0F / fps;
+        _fixedFrameRate = 1.0F / fps;
     }
     
     /// <summary>
@@ -411,7 +412,7 @@ public class Game : Disposable {
     /// </summary>
     /// <returns>The sample count of the MSAA render target texture.</returns>
     public TextureSampleCount? GetSampleCount() {
-        return this._renderTarget.SampleCount;
+        return _renderTarget.SampleCount;
     }
     
     /// <summary>
@@ -419,7 +420,7 @@ public class Game : Disposable {
     /// </summary>
     /// <param name="sampleCount">The texture sample count to apply, defining the level of anti-aliasing.</param>
     public void SetSampleCount(TextureSampleCount sampleCount) {
-        this._renderTarget.SampleCount = sampleCount;
+        _renderTarget.SampleCount = sampleCount;
         SceneManager.FilterTarget.SampleCount = sampleCount;
     }
     
@@ -430,28 +431,28 @@ public class Game : Disposable {
             GuiManager.Destroy();
             RegistryManager.Destroy();
             
-            this.Content.Dispose();
+            Content.Dispose();
             
-            this._renderTarget.Dispose();
-            this._renderResult.Dispose();
-            this.FullScreenRenderPass.Dispose();
+            _renderTarget.Dispose();
+            _renderResult.Dispose();
+            FullScreenRenderPass.Dispose();
             
-            this.GlobalImmediateRenderer.Dispose();
-            this.GlobalPrimitiveBatch.Dispose();
-            this.GlobalSpriteBatch.Dispose();
+            GlobalImmediateRenderer.Dispose();
+            GlobalPrimitiveBatch.Dispose();
+            GlobalSpriteBatch.Dispose();
             
-            this.CommandList.Dispose();
+            CommandList.Dispose();
             
             GlobalGraphicsAssets.Destroy();
             GlobalResource.Destroy();
             
             AudioContext.Deinitialize();
             
-            this.GraphicsDevice.Dispose();
-            this.MainWindow.Dispose();
+            GraphicsDevice.Dispose();
+            MainWindow.Dispose();
 
-            JLogger.Listener -= this._logJitter.Log;
-            Logger.Message -= this._logFileWriter.WriteFileMsg;
+            JLogger.Listener -= _logJitter.Log;
+            Logger.Message -= _logFileWriter.WriteFileMsg;
         }
     }
 }
