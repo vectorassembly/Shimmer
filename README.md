@@ -16,7 +16,6 @@ Libraries - [Nuget](https://www.nuget.org/packages)
 - [`Bliss`](https://www.nuget.org/packages/Bliss)
 - [`Newtonsoft.Json`](https://www.nuget.org/packages/Newtonsoft.Json)
 - [`Jitter2`](https://www.nuget.org/packages/Jitter2)
-- [`HughPH.Box2D`](https://www.nuget.org/packages/HughPH.Box2D)
 - [`LibNoise`](https://www.nuget.org/packages/LibNoise)
 
 ---
