@@ -23,7 +23,7 @@ Libraries - [Nuget](https://www.nuget.org/packages)
 ## Little roadmap
  - [ ] [Friflo ECS](https://github.com/friflo/Friflo.Engine.ECS) Integration.
  - [ ] [FMOD Audio Engine](https://www.fmod.com/) integration or a custom [SteamAudio (Phonon)](https://valvesoftware.github.io/steam-audio/)-based audio pipeline for more MIT-friendly approach.
- - [ ] Bug free font oversampling / MSDF.
+ - [ ] Bug free font oversampling / [MSDF](https://github.com/Chlumsky/msdfgen).
  - [ ] Additional UI elements (Think [Godot's](http://godotengine.org/) Abstract [Container](https://docs.godotengine.org/en/stable/classes/class_container.html) and [BoxContainer](https://docs.godotengine.org/en/stable/classes/class_boxcontainer.html) classes).
  - [ ] [OpenXR](https://www.khronos.org/openxr/)-Based VR API.
  
