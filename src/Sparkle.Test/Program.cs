@@ -1,7 +1,6 @@
 ﻿using Bliss.CSharp.Windowing;
 using Sparkle.CSharp;
 using Sparkle.Test.CSharp;
-using Sparkle.Test.CSharp.Dim2D;
 using Sparkle.Test.CSharp.Dim3D;
 using Veldrid;
 

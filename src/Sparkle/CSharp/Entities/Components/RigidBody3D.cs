@@ -20,7 +20,6 @@ public class RigidBody3D : Component {
     /// Gets a list of component types that are incompatible with this component.
     /// </summary>
     public override IReadOnlyList<Type> InCompatibleTypes => [
-        typeof(RigidBody2D),
         typeof(SoftBody3D)
     ];
     

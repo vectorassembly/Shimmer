@@ -9,7 +9,6 @@ using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.Graphics.Rendering;
 using Sparkle.CSharp.Graphics.Rendering.Sprites;
 using Sparkle.CSharp.Physics;
-using Sparkle.CSharp.Physics.Dim2;
 using Sparkle.CSharp.Physics.Dim3;
 using Veldrid;
 
@@ -90,22 +89,22 @@ public abstract class Scene : Disposable {
     /// <param name="rendererFactory">Optional factory used to create a custom renderer for the scene.</param>
     /// <param name="simulationFactory">Optional factory used to create a custom physics simulation.</param>
     protected Scene(string name, SceneType sceneType, Func<GraphicsDevice, IRenderer>? rendererFactory = null, Func<Simulation>? simulationFactory = null) {
-        this.Name = name;
-        this.SceneType = sceneType;
-        this._rendererFactory = rendererFactory;
-        this._simulationFactory = simulationFactory;
-        this.Entities = new Dictionary<uint, Entity>();
-        this._multiInstanceRenderers = new List<MultiInstanceRenderer>();
+        Name = name;
+        SceneType = sceneType;
+        _rendererFactory = rendererFactory;
+        _simulationFactory = simulationFactory;
+        Entities = new Dictionary<uint, Entity>();
+        _multiInstanceRenderers = new List<MultiInstanceRenderer>();
     }
     
     /// <summary>
     /// Initializes the scene. Can be overridden in derived classes.
     /// </summary>
     protected internal virtual void Init() {
-        this.Renderer = this._rendererFactory?.Invoke(GlobalGraphicsAssets.GraphicsDevice) ?? new BasicForwardRenderer(GlobalGraphicsAssets.GraphicsDevice);
-        this.Physics3DDebugDrawer = new Physics3DDebugDrawer(GlobalGraphicsAssets.GraphicsDevice, GlobalGraphicsAssets.Window);
-        this.SpriteRenderer = new SpriteRenderer();
-        this.Simulation = this._simulationFactory?.Invoke() ?? (this.SceneType == SceneType.Scene2D ? new Simulation2D(new PhysicsSettings2D()) : new Simulation3D(new PhysicsSettings3D()));
+        Renderer = _rendererFactory?.Invoke(GlobalGraphicsAssets.GraphicsDevice) ?? new BasicForwardRenderer(GlobalGraphicsAssets.GraphicsDevice);
+        Physics3DDebugDrawer = new Physics3DDebugDrawer(GlobalGraphicsAssets.GraphicsDevice, GlobalGraphicsAssets.Window);
+        SpriteRenderer = new SpriteRenderer();
+        Simulation = _simulationFactory?.Invoke() ?? new Simulation3D(new PhysicsSettings3D());
     }
     
     /// <summary>
@@ -113,7 +112,7 @@ public abstract class Scene : Disposable {
     /// </summary>
     /// <param name="delta">The time elapsed since the last update.</param>
     protected internal virtual void Update(double delta) {
-        foreach (Entity entity in this.Entities.Values) {
+        foreach (Entity entity in Entities.Values) {
             entity.Update(delta);
         }
     }
@@ -123,7 +122,7 @@ public abstract class Scene : Disposable {
     /// </summary>
     /// <param name="delta">The time elapsed since the last update.</param>
     protected internal virtual void AfterUpdate(double delta) {
-        foreach (Entity entity in this.Entities.Values) {
+        foreach (Entity entity in Entities.Values) {
             entity.AfterUpdate(delta);
         }
     }
@@ -133,9 +132,9 @@ public abstract class Scene : Disposable {
     /// </summary>
     /// <param name="fixedStep">The fixed time interval to update the scene and entities.</param>
     protected internal virtual void FixedUpdate(double fixedStep) {
-        this.Simulation.Step(fixedStep);
+        Simulation.Step(fixedStep);
         
-        foreach (Entity entity in this.Entities.Values) {
+        foreach (Entity entity in Entities.Values) {
             entity.FixedUpdate(fixedStep);
         }
     }
@@ -148,45 +147,45 @@ public abstract class Scene : Disposable {
     protected internal virtual void Draw(GraphicsContext context, Framebuffer framebuffer) {
         
         // Draw skybox.
-        this.SkyBox?.Draw(context.CommandList, framebuffer.OutputDescription);
+        SkyBox?.Draw(context.CommandList, framebuffer.OutputDescription);
         
         // Draw physics debug drawer.
-        this.Physics3DDebugDrawer.Begin(context.CommandList, framebuffer.OutputDescription);
+        Physics3DDebugDrawer.Begin(context.CommandList, framebuffer.OutputDescription);
         
-        foreach (Entity entity in this.Entities.Values) {
+        foreach (Entity entity in Entities.Values) {
             if (entity.TryGetComponent(out RigidBody3D? rigidBody)) {
                 if (rigidBody.DrawDebug) {
-                    this.Physics3DDebugDrawer.PushColor(rigidBody.DebugDrawColor);
-                    rigidBody.DebugDraw(this.Physics3DDebugDrawer);
-                    this.Physics3DDebugDrawer.PopColor();
+                    Physics3DDebugDrawer.PushColor(rigidBody.DebugDrawColor);
+                    rigidBody.DebugDraw(Physics3DDebugDrawer);
+                    Physics3DDebugDrawer.PopColor();
                 }
             }
             else if (entity.TryGetComponent(out SoftBody3D? softBody)) {
                 if (softBody.DrawDebug) {
-                    this.Physics3DDebugDrawer.PushColor(softBody.DebugDrawColor);
-                    softBody.DebugDraw(this.Physics3DDebugDrawer);
-                    this.Physics3DDebugDrawer.PopColor();
+                    Physics3DDebugDrawer.PushColor(softBody.DebugDrawColor);
+                    softBody.DebugDraw(Physics3DDebugDrawer);
+                    Physics3DDebugDrawer.PopColor();
                 }
             }
         }
         
-        this.Physics3DDebugDrawer.End();
+        Physics3DDebugDrawer.End();
         
         // Draw entities (Renderables linked to the renderer).
-        foreach (Entity entity in this.Entities.Values) {
+        foreach (Entity entity in Entities.Values) {
             entity.Draw(context, framebuffer);
         }
         
         // Draw multi instance renderers (Renderables linked to the renderer).
-        foreach (MultiInstanceRenderer multiInstanceRenderer in this._multiInstanceRenderers) {
+        foreach (MultiInstanceRenderer multiInstanceRenderer in _multiInstanceRenderers) {
             multiInstanceRenderer.Draw(context, framebuffer);
         }
         
         // Draw 3D renderer.
-        this.Renderer.Draw(context.CommandList, framebuffer.OutputDescription);
+        Renderer.Draw(context.CommandList, framebuffer.OutputDescription);
         
         // Draw sprite renderer.
-        this.SpriteRenderer.Draw(context, framebuffer);
+        SpriteRenderer.Draw(context, framebuffer);
     }
     
     /// <summary>
@@ -194,7 +193,7 @@ public abstract class Scene : Disposable {
     /// </summary>
     /// <param name="rectangle">The new window dimensions.</param>
     protected internal virtual void Resize(Rectangle rectangle) {
-        foreach (Entity entity in this.Entities.Values) {
+        foreach (Entity entity in Entities.Values) {
             entity.Resize(rectangle);
         }
     }
@@ -203,7 +202,7 @@ public abstract class Scene : Disposable {
     /// Retrieves all entities in the scene.
     /// </summary>
     public IEnumerable<Entity> GetEntities() {
-        return this.Entities.Values;
+        return Entities.Values;
     }
     
     /// <summary>
@@ -211,7 +210,7 @@ public abstract class Scene : Disposable {
     /// </summary>
     /// <param name="tag">The tag to filter entities.</param>
     public IEnumerable<Entity> GetEntitiesWithTag(string tag) {
-        return this.Entities.Values.Where(entity => entity.Tag == tag);
+        return Entities.Values.Where(entity => entity.Tag == tag);
     }
 
     /// <summary>
@@ -219,7 +218,7 @@ public abstract class Scene : Disposable {
     /// </summary>
     /// <param name="id">The entity ID.</param>
     public bool HasEntity(uint id) {
-        return this.Entities.ContainsKey(id);
+        return Entities.ContainsKey(id);
     }
     
     /// <summary>
@@ -227,7 +226,7 @@ public abstract class Scene : Disposable {
     /// </summary>
     /// <param name="id">The entity ID.</param>
     public Entity? GetEntity(uint id) {
-        if (!this.TryGetEntity(id, out Entity? result)) {
+        if (!TryGetEntity(id, out Entity? result)) {
             return null;
         }
 
@@ -240,7 +239,7 @@ public abstract class Scene : Disposable {
     /// <param name="id">The entity ID.</param>
     /// <param name="entity">The retrieved entity, if found.</param>
     public bool TryGetEntity(uint id, [NotNullWhen(true)] out Entity? entity) {
-        return this.Entities.TryGetValue(id, out entity);
+        return Entities.TryGetValue(id, out entity);
     }
 
     /// <summary>
@@ -249,7 +248,7 @@ public abstract class Scene : Disposable {
     /// <param name="entity">The entity to add.</param>
     /// <exception cref="Exception">Thrown if the entity is already present in the scene or belongs to another scene.</exception>
     public void AddEntity(Entity entity) {
-        if (!this.TryAddEntity(entity)) {
+        if (!TryAddEntity(entity)) {
             throw new Exception($"The entity with the id: [{entity.Id}] is already present in the scene or has been added to another one!");
         }
     }
@@ -260,7 +259,7 @@ public abstract class Scene : Disposable {
     /// <param name="entity">The entity to add.</param>
     /// <returns>True if the entity was successfully added; otherwise, false.</returns>
     public bool TryAddEntity(Entity entity) {
-        if (this.Entities.ContainsKey(entity.Id)) {
+        if (Entities.ContainsKey(entity.Id)) {
             return false;
         }
         
@@ -269,10 +268,10 @@ public abstract class Scene : Disposable {
         }
         
         entity.Scene = this;
-        entity.Id = ++this._entityIds;
+        entity.Id = ++_entityIds;
         entity.Init();
         
-        this.Entities.Add(entity.Id, entity);
+        Entities.Add(entity.Id, entity);
         return true;
     }
     
@@ -282,8 +281,8 @@ public abstract class Scene : Disposable {
     /// <param name="entity">The entity to remove.</param>
     /// <exception cref="Exception">Thrown if the entity could not be removed.</exception>
     public void RemoveEntity(Entity entity) {
-        if (!this.TryRemoveEntity(entity)) {
-            throw new Exception($"Failed to Remove/Dispose the entity: [{entity.Id}] from the scene: [{this.Name}]");
+        if (!TryRemoveEntity(entity)) {
+            throw new Exception($"Failed to Remove/Dispose the entity: [{entity.Id}] from the scene: [{Name}]");
         }
     }
     
@@ -293,15 +292,15 @@ public abstract class Scene : Disposable {
     /// <param name="entity">The entity to remove.</param>
     /// <returns>True if the entity was successfully removed; otherwise, false.</returns>
     public bool TryRemoveEntity(Entity entity) {
-        if (!this.Entities.ContainsKey(entity.Id)) {
+        if (!Entities.ContainsKey(entity.Id)) {
             return false;
         }
         
         entity.Dispose();
         
         // Ensure the component is removed, even if `Dispose` was overridden incorrectly.
-        if (this.Entities.ContainsKey(entity.Id)) {
-            this.Entities.Remove(entity.Id);
+        if (Entities.ContainsKey(entity.Id)) {
+            Entities.Remove(entity.Id);
         }
         
         return true;
@@ -313,8 +312,8 @@ public abstract class Scene : Disposable {
     /// <param name="id">The ID of the entity to remove.</param>
     /// <exception cref="Exception">Thrown if the entity could not be removed.</exception>
     public void RemoveEntity(uint id) {
-        if (!this.TryRemoveEntity(id)) {
-            throw new Exception($"Failed to Remove/Dispose the entity: [{id}] from the scene: [{this.Name}]");
+        if (!TryRemoveEntity(id)) {
+            throw new Exception($"Failed to Remove/Dispose the entity: [{id}] from the scene: [{Name}]");
         }
     }
 
@@ -324,15 +323,15 @@ public abstract class Scene : Disposable {
     /// <param name="id">The ID of the entity to remove.</param>
     /// <returns>True if the entity was successfully removed; otherwise, false.</returns>
     public bool TryRemoveEntity(uint id) {
-        if (!this.Entities.TryGetValue(id, out Entity? entity)) {
+        if (!Entities.TryGetValue(id, out Entity? entity)) {
             return false;
         }
         
         entity.Dispose();
         
         // Ensure the component is removed, even if `Dispose` was overridden incorrectly.
-        if (this.Entities.ContainsKey(id)) {
-            this.Entities.Remove(id);
+        if (Entities.ContainsKey(id)) {
+            Entities.Remove(id);
         }
 
         return true;
@@ -345,36 +344,36 @@ public abstract class Scene : Disposable {
     internal void AddMultiInstanceRenderer(MultiInstanceRenderer renderer) {
         
         // Check if its already added and if yes just ignore it.
-        foreach (Entity entity in this.Entities.Values) {
+        foreach (Entity entity in Entities.Values) {
             if (entity.TryGetComponent(out InstancedRenderProxy? renderProxy)) {
-                if (this._multiInstanceRenderers.Contains(renderProxy.MultiInstanceRenderer)) {
+                if (_multiInstanceRenderers.Contains(renderProxy.MultiInstanceRenderer)) {
                     return;
                 }
             }
         }
         
         // Add multi-instance renderer.
-        this._multiInstanceRenderers.Add(renderer);
+        _multiInstanceRenderers.Add(renderer);
     }
     
     protected override void Dispose(bool disposing) {
         if (disposing) {
-            var enumerator = this.Entities.GetEnumerator();
+            var enumerator = Entities.GetEnumerator();
             
             while (enumerator.MoveNext()) {
                 Entity entity = enumerator.Current.Value;
                 entity.Dispose();
                 
                 // Ensure the component is removed, even if `Dispose` was overridden incorrectly.
-                if (this.Entities.ContainsKey(entity.Id)) {
-                    this.Entities.Remove(entity.Id);
+                if (Entities.ContainsKey(entity.Id)) {
+                    Entities.Remove(entity.Id);
                 }
             }
             
-            this._entityIds = 0;
-            this.Simulation.Dispose();
-            this.Renderer.Dispose();
-            this.Physics3DDebugDrawer.Dispose();
+            _entityIds = 0;
+            Simulation.Dispose();
+            Renderer.Dispose();
+            Physics3DDebugDrawer.Dispose();
         }
     }
 }
