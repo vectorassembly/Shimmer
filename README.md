@@ -7,6 +7,10 @@ __Shimmer__ is a fork of [Sparkle](https://github.com/MrScautHD/Sparkle), a mode
 > [!CAUTION]  
 > This is not production ready by any means, expect breaking changes and consider using [Sparkle](https://github.com/MrScautHD/Sparkle) instead.
 
+> [!WARNING]  
+> FMOD-related content does not fall under MIT license, it is NOT an free / opensource tool, please refer to [FMOD Licensing](https://www.fmod.com/licensing#licensing-faq) for more information.
+
+
 Libraries - [Nuget](https://www.nuget.org/packages)
 ======================================================
 - [`Bliss`](https://www.nuget.org/packages/Bliss)
