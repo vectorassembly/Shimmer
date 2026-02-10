@@ -20,4 +20,11 @@ Libraries - [Nuget](https://www.nuget.org/packages)
 
 ---
 
+## Little roadmap
+ - [ ] [Friflo ECS](https://github.com/friflo/Friflo.Engine.ECS) Integration.
+ - [ ] FMOD Audio Engine integration or SteamAudio (Phonon) for more MIT-friendly approach.
+ - [ ] Bug free font oversampling.
+ - [ ] Additional UI elements (Think Godot's Abstract Container and BoxContainer classes).
+ - [ ] OpenXR-Based VR API.
+ 
 https://vectorassembly.org
